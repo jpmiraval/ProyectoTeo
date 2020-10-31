@@ -1,4 +1,4 @@
-#include "Brzozowski.h"
+#include "functions.h"
 
 int main(){
     brzozowski();
