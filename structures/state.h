@@ -23,6 +23,7 @@ struct state_d : state{
 struct state_n : state{
     std::vector<state_n*> zero{};
     std::vector<state_n*> one{};
+    std::vector<state_n*> closure{};
 
     state_n(int stat): state(stat) {};
     void set_relation(int i, state_n* estado);
