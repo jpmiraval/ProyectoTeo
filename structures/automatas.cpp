@@ -2,75 +2,76 @@
 
 AFD::AFD(int n, int initial_state, std::vector<int> finals) : n_states(n), n_final(finals.size()) {
     for(int i = 0; i < n_states; ++i)
-        states.push_back(new state_d(i));
+        states[i] = new state_d(i);
     set_final_states(finals);
     fill_transitions();
     initial = states[initial_state];
 };
 
 AFD::AFD(AFN* afn){
-    std::unordered_map<std::string, int> new_states;
-    std::queue<std::string> states_queue;
-    for(auto& state: afn->states)
-        states.push_back(new state_d(state->state_number));
-
+    std::map<std::set<int>*, int> new_states;
+    std::set<int> added;
+    std::queue<int> states_queue;
+    int n = states.size();
     int cont = states.size();
-    for(auto& state: afn->states){
-        verify_state(cont, state, new_states, states_queue);
-    }
-
-    while (!states_queue.empty()) {
+    while(!states_queue.empty()){
         auto id = states_queue.front();
         states_queue.pop();
-        std::vector<int> zero;
-        std::vector<int> one;
-        for (auto s: id){
-            for(auto &zs: afn->states[(int)s-48]->zero){
-                if (std::find(zero.begin(), zero.end(), zs->state_number) == zero.end())
-                    zero.push_back(zs->state_number);
-                
+
+        states[id] = new state_d(id);
+
+        if(afn->states[id]->zero.empty()){
+            auto new_state = new std::set<int>;
+            new_state->insert(-1);
+            if (new_states.find(new_state) == new_states.end()) {
+                added.insert(cont);
+                states_queue.push(cont);
+                new_states[new_state] = cont;
+                afn->states[cont] = new state_n(cont);
             }
+            states[id]->zero = new_states[new_state];
         }
+        
+        else if (afn->states[id]->zero.size() == 1)
+            states[1]->zero = afn->states[id]->zero[0]->state_number;
+        else{
+            auto new_state = new std::set<int>;
+            for (auto i: afn->states[id]->zero)
+                new_state->insert(i);
+            for (auto i: afn->states[id]->one)
+                new_state->insert(i);
+            for (auto i: afn->states[id]->closure)
+                new_state->insert(i);
 
+            if (new_states.find(new_state) == new_states.end()) {
+                added.insert(cont);
+                states_queue.push(cont);
+                new_states[new_state] = cont;
+                afn->states[cont] = new state_n(cont);
+                // logica de añadir ->zero, ->one, ->closure al estado
+                for (auto it=new_state->begin(); it!=new_state->end(); ++it){
+                    for (auto i: afn->states[*it]->zero)
+                        afn->states[cont]->zero.push_back(i);
+                    for (auto i: afn->states[*it]->one)
+                        afn->states[cont]->one.push_back(i);
+                    for (auto i: afn->states[*it]->closure){
+                        afn->states[cont]->closure.push_back(i);
+                        
+                    }
+                }
+            }
+            states[id]->zero = new_states[new_state];
+        }
+        if (afn->states[id]->one.empty()){
+            // copy
+        }
+        else if (afn->states[id]->one.size() == 1)
+            states[afn->states[id]->state_number]->one = afn->states[id]->one[0]->state_number;
+        else{
+            // copy
+        }
     }
-    
-
 }
-
-void AFD::verify_state(int& cont, state_n* state, std::unordered_map<std::string, int>& new_states, std::queue<std::string>& states_queue){
-    if (state->zero.empty()){
-        insert_new_state("-1", cont, state->state_number, new_states, states_queue);
-    }
-    else if (state->zero.size() == 1)
-        states[state->state_number]->zero = state->zero[0]->state_number;
-    else{
-        std::string id;
-        for (auto& s: state->zero)
-            id += std::to_string(s->state_number);
-        insert_new_state(id, cont, state->state_number, new_states, states_queue);
-    }
-    if (state->one.empty()){
-        insert_new_state("-1", cont, state->state_number, new_states, states_queue);
-    }
-    else if (state->one.size() == 1)
-        states[state->state_number]->zero = state->zero[0]->state_number;
-    else{
-        std::string id;
-        for (auto& s: state->one)
-            id += std::to_string(s->state_number);
-        insert_new_state(id, cont, state->state_number, new_states, states_queue);
-    }
-}
-
-void AFD::insert_new_state(std::string id, int& cont, int index, std::unordered_map<std::string, int>& new_states, std::queue<std::string>& states_queue){
-    if (new_states.find(id) == new_states.end()){
-        new_states.insert(std::make_pair(id, cont));
-        states.push_back(new state_d(cont++));
-        states_queue.push(id);
-    } else
-        states[index]->zero = new_states[id];
-}
-
 
 void AFD::set_final_states(std::vector<int> finals){
     for(auto &i: finals)
@@ -89,38 +90,37 @@ void AFD::fill_transitions(){
 
 AFN::AFN(AFD* afd): n_states(afd->n_states), n_final(afd->n_final) {
     for(int i = 0; i < n_states; ++i)
-        states.push_back(new state_n(i));
+        states[i] = new state_n(i);
 
     std::vector<int> finals;
     
-    for (auto &state: afd->states){
-        states[state->zero]->set_relation(0, states[state->state_number]);
-        states[state->one]->set_relation(1, states[state->state_number]);
-
-        if (state->is_final)
-            finals.push_back(state->state_number);
+    for (auto& state: afd->states){
+        states[state.second->zero]->set_relation(0, state.second->state_number);
+        states[state.second->one]->set_relation(1, state.second->state_number);
+        if (state.second->is_final)
+            finals.push_back(state.second->state_number);
         else
-            states[state->state_number]->is_final = true;        
+            states[state.second->state_number]->is_final = true;        
     }
     states[afd->initial->state_number]->is_final = true;
 
     if (finals.size() == 1)
         initial = states[finals[0]];
     else {
-        initial = new state_n(n_states++);
-        states.push_back(initial);
+        initial = new state_n(n_states);
+        states[n_states++] = initial;
         for (auto n: finals)
-            initial->closure.push_back(states[n]);
+            initial->closure.push_back(n);
     }
 }
 
 void AFN::printAFN(){
     for (auto& state: states){
-        std::cout << "Number: " << state->state_number << "    Zero: ";
-        for (auto& i: state->zero)
+        std::cout << "Number: " << state.second->state_number << "    Zero: ";
+        for (auto& i: state.second->zero)
             std::cout << i->state_number << " ";
         std::cout << "    One: ";
-        for (auto& i: state->one)
+        for (auto& i: state.second->one)
             std::cout << i->state_number << " ";
         std::cout << "\n";
     }

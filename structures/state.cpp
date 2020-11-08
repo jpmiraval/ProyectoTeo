@@ -12,7 +12,7 @@ void state_d::set_relation(int i, int estado){
 };
 
 
-void state_n::set_relation(int i, state_n* estado){
+void state_n::set_relation(int i, int estado){
     switch(i){
         case 0:
             zero.push_back(estado);
