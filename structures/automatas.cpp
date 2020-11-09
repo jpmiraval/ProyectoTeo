@@ -53,7 +53,7 @@ AFD::AFD(AFN* afn){
                     for (auto i: afn->states[*it]->one)
                         afn->states[cont]->one.push_back(i);
                     for (auto i: afn->states[*it]->closure)
-                        closure.push_back(i);
+                        closure.push(i);
                 }
                 while (!closure.empty()){
                     auto c = closure.front();
@@ -62,7 +62,7 @@ AFD::AFD(AFN* afn){
                     visited.insert(c);
                     for (auto i: afn->states[c]->closure){
                         if (visited.find(i) == visited.end())
-                            closure.push_back(i)
+                            closure.push(i)
                     }
                 }
             }
@@ -99,7 +99,7 @@ AFD::AFD(AFN* afn){
                     for (auto i: afn->states[*it]->one)
                         afn->states[cont]->one.push_back(i);
                     for (auto i: afn->states[*it]->closure)
-                        closure.push_back(i);
+                        closure.push(i);
                 }
                 while (!closure.empty()){
                     auto c = closure.front();
@@ -108,7 +108,7 @@ AFD::AFD(AFN* afn){
                     visited.insert(c);
                     for (auto i: afn->states[c]->closure){
                         if (visited.find(i) == visited.end())
-                            closure.push_back(i)
+                            closure.push(i)
                     }
                 }
             }
