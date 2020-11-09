@@ -15,5 +15,6 @@ AFD* read_AFD(){
 void  brzozowski(){
 	auto afd = read_AFD();
 	auto afn = new AFN(afd);
+	
     afn->printAFN();
 }

@@ -8,6 +8,7 @@ AFD::AFD(int n, int initial_state, std::vector<int> finals) : n_states(n), n_fin
     initial = states[initial_state];
 };
 
+//Conversión AFN a AFD
 AFD::AFD(AFN* afn){
     std::map<std::set<int>*, int> new_states;
     std::set<int> added;
@@ -27,7 +28,7 @@ AFD::AFD(AFN* afn){
                 added.insert(cont);
                 states_queue.push(cont);
                 new_states[new_state] = cont;
-                afn->states[cont] = new state_n(cont);
+                afn->states[cont] = new state_n(cont++);
             }
             states[id]->zero = new_states[new_state];
         }
@@ -38,9 +39,51 @@ AFD::AFD(AFN* afn){
             auto new_state = new std::set<int>;
             for (auto i: afn->states[id]->zero)
                 new_state->insert(i);
+
+            if (new_states.find(new_state) == new_states.end()) {
+                added.insert(cont);
+                states_queue.push(cont);
+                new_states[new_state] = cont;
+                afn->states[cont] = new state_n(cont);
+                std::queue<int> closure;
+                std::set<int> visited;
+                for (auto it=new_state->begin(); it!=new_state->end(); ++it){
+                    for (auto i: afn->states[*it]->zero)
+                        afn->states[cont]->zero.push_back(i);
+                    for (auto i: afn->states[*it]->one)
+                        afn->states[cont]->one.push_back(i);
+                    for (auto i: afn->states[*it]->closure)
+                        closure.push_back(i);
+                }
+                while (!closure.empty()){
+                    auto c = closure.front();
+                    closure.pop();
+                    afn->states[cont]->closure.push_back(c);
+                    visited.insert(c);
+                    for (auto i: afn->states[c]->closure){
+                        if (visited.find(i) == visited.end())
+                            closure.push_back(i)
+                    }
+                }
+            }
+            states[id]->zero = new_states[new_state];
+        }
+        if (afn->states[id]->one.empty()){
+            auto new_state = new std::set<int>;
+            new_state->insert(-1);
+            if (new_states.find(new_state) == new_states.end()) {
+                added.insert(cont);
+                states_queue.push(cont);
+                new_states[new_state] = cont;
+                afn->states[cont] = new state_n(cont++);
+            }
+            states[id]->one = new_states[new_state];
+        }
+        else if (afn->states[id]->one.size() == 1)
+            states[afn->states[id]->state_number]->one = afn->states[id]->one[0]->state_number;
+        else{
+            auto new_state = new std::set<int>;
             for (auto i: afn->states[id]->one)
-                new_state->insert(i);
-            for (auto i: afn->states[id]->closure)
                 new_state->insert(i);
 
             if (new_states.find(new_state) == new_states.end()) {
@@ -48,27 +91,28 @@ AFD::AFD(AFN* afn){
                 states_queue.push(cont);
                 new_states[new_state] = cont;
                 afn->states[cont] = new state_n(cont);
-                // logica de añadir ->zero, ->one, ->closure al estado
+                std::queue<int> closure;
+                std::set<int> visited;
                 for (auto it=new_state->begin(); it!=new_state->end(); ++it){
                     for (auto i: afn->states[*it]->zero)
                         afn->states[cont]->zero.push_back(i);
                     for (auto i: afn->states[*it]->one)
                         afn->states[cont]->one.push_back(i);
-                    for (auto i: afn->states[*it]->closure){
-                        afn->states[cont]->closure.push_back(i);
-                        
+                    for (auto i: afn->states[*it]->closure)
+                        closure.push_back(i);
+                }
+                while (!closure.empty()){
+                    auto c = closure.front();
+                    closure.pop();
+                    afn->states[cont]->closure.push_back(c);
+                    visited.insert(c);
+                    for (auto i: afn->states[c]->closure){
+                        if (visited.find(i) == visited.end())
+                            closure.push_back(i)
                     }
                 }
             }
-            states[id]->zero = new_states[new_state];
-        }
-        if (afn->states[id]->one.empty()){
-            // copy
-        }
-        else if (afn->states[id]->one.size() == 1)
-            states[afn->states[id]->state_number]->one = afn->states[id]->one[0]->state_number;
-        else{
-            // copy
+            states[id]->one = new_states[new_state];
         }
     }
 }
