@@ -6,6 +6,7 @@
 #include <queue>
 #include <set>
 #include <algorithm>
+#include <utility>
 #include <string>
 
 class AFN;
