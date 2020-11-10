@@ -14,7 +14,9 @@ AFD* read_AFD(){
 
 void  brzozowski(){
 	auto afd = read_AFD();
+	afd->printAFD();
 	auto afn = new AFN(afd);
-	
-    afn->printAFN();
+	std::cout << '\n'; afn->printAFN();
+	auto afd2 = new AFD(afn);
+	std::cout << '\n'; afd2->printAFD();
 }

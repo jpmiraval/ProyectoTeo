@@ -20,5 +20,7 @@ void state_n::set_relation(int i, int estado){
         case 1:
             one.push_back(estado);
             break;
+        case -1:
+            closure.push_back(estado);
     }
 };
