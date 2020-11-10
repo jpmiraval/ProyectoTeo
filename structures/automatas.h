@@ -19,12 +19,13 @@ private:
     std::map<int, state_d*> states;
 
     void fill_transitions();
-    void set_final_states(std::vector<int> finals);
+    void set_final_states(const std::vector<int>& finals);
 
 public:
-    AFD(int n, int initial_state, std::vector<int> finals);
+    AFD(int n, int initial_state, const std::vector<int>& finals);
     AFD(AFN* afn);
     void printAFD();
+    void getAFD();
     friend class AFN;
 };
 
@@ -38,12 +39,14 @@ private:
     std::map<int, state_n*> states{};
 
     void fill_transitions(int trans);
-    void set_final_states(std::vector<int> finals);
+    void set_final_states(const std::vector<int>& finals);
 
 public:
     inline AFN() : initial(nullptr) {};
-    AFN(int n, int initial_state, std::vector<int> finals, int trans);
+    AFN(int n, int initial_state, const std::vector<int>& finals, int trans);
     AFN(AFD* afd);
+
     void printAFN();
+    void getAFN();
     friend class AFD;
 };
