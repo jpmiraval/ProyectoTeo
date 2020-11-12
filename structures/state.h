@@ -25,6 +25,8 @@ struct state_n : state{
     std::vector<int> one{};
     std::vector<int> closure{};
 
-    state_n(int stat): state(stat) {};
+    inline state_n(int stat): state(stat) {
+        closure.push_back(stat);
+    };
     void set_relation(int i, int estado);
 };

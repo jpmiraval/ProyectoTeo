@@ -1,14 +1,11 @@
 #include "functions.h"
 
 int main(){
-    //brzozowski();
-    auto afd = read_AFD();
-    Eq_test(*afd);
+    brzozowski();
     /*
-    auto afn = new AFN(4, 0, std::vector<int>{1, 3}, 8);
-    std::cout << '\n'; afn->printAFN();
-    auto afd2 = new AFD(afn);
-    std::cout << '\n'; afd2->printAFD();*/
+    std::cout << "\n \nEq\n";
+    auto afd = read_AFD();
+    Eq_test(*afd);*/
 
     return EXIT_SUCCESS;
 }

@@ -27,8 +27,47 @@ AFD::AFD(AFN* afn): n_final(0){
     std::set<int> added;
     std::queue<int> states_queue;
     int cont = afn->states.rbegin()->first +1;
-    states_queue.push(afn->initial->state_number);
-    added.insert(afn->initial->state_number);
+    int in;
+    if (afn->initial->closure.size()==1){
+        states_queue.push(afn->initial->state_number);
+        added.insert(afn->initial->state_number);
+        in = afn->initial->state_number;
+    }
+    else {
+        std::queue<int> closure;
+        std::set<int> visited;
+        std::set<int> new_state;
+        afn->states[cont] = new state_n(cont);
+        for (auto i: afn->states[afn->initial->state_number]->closure)
+            closure.push(i); 
+        while (!closure.empty()) {
+            auto c = closure.front();
+            closure.pop();
+            if (std::find(afn->states[cont]->closure.begin(), afn->states[cont]->closure.end(), c) ==
+            afn->states[cont]->closure.end()) {
+                new_state.insert(c);
+                visited.insert(c);
+            }
+            for (auto i: afn->states[c]->closure) {
+                if (visited.find(i) == visited.end())
+                closure.push(i);
+            }
+        }
+        for (auto& it: new_state) {
+            for (auto i: afn->states[it]->zero) {
+                if (std::find(afn->states[cont]->zero.begin(), afn->states[cont]->zero.end(), i)==afn->states[cont]->zero.end())
+                    afn->states[cont]->zero.push_back(i);
+            }
+            for (auto i: afn->states[it]->one) {
+                if (std::find(afn->states[cont]->one.begin(), afn->states[cont]->one.end(), i)==afn->states[cont]->one.end())
+                    afn->states[cont]->one.push_back(i);
+            }
+        }
+        states_queue.push(cont);
+        added.insert(cont);
+        in = cont;
+        ++cont;
+    }
     while(!states_queue.empty()){
         auto id = states_queue.front();
         states_queue.pop();
@@ -92,10 +131,11 @@ AFD::AFD(AFN* afn): n_final(0){
                 while (!closure.empty()){
                     auto c = closure.front();
                     closure.pop();
-                    if (std::find(afn->states[cont]->closure.begin(), afn->states[cont]->closure.end(), c)==afn->states[cont]->closure.end()) {
+                    if (std::find(afn->states[cont]->closure.begin(), afn->states[cont]->closure.end(), c)==afn->states[cont]->closure.end()
+                            and new_state.find(c) == new_state.end()) {
                         afn->states[cont]->closure.push_back(c);
-                        visited.insert(c);
                     }
+                    visited.insert(c);
                     for (auto i: afn->states[c]->closure){
                         if (visited.find(i) == visited.end())
                             closure.push(i);
@@ -174,7 +214,7 @@ AFD::AFD(AFN* afn): n_final(0){
         }
     }
     n_states = states.size();
-    initial = states[afn->initial->state_number];
+    initial = states[in];
 }
 
 void AFD::printAFD(){
@@ -203,8 +243,9 @@ void AFD::getAFD() {
 
 
 AFN::AFN(int n, int initial_state, const std::vector<int>& finals, int trans) : n_states(n), n_final(finals.size()) {
-    for(int i = 0; i < n_states; ++i)
+    for(int i = 0; i < n_states; ++i){
         states[i] = new state_n(i);
+    }
     set_final_states(finals);
     fill_transitions(trans);
     initial = states[initial_state];
