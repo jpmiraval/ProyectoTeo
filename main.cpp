@@ -1,8 +1,9 @@
 #include "functions.h"
 
 int main(){
-    brzozowski();
-
+    //brzozowski();
+    auto afd = read_AFD();
+    Eq_test(*afd);
     /*
     auto afn = new AFN(4, 0, std::vector<int>{1, 3}, 8);
     std::cout << '\n'; afn->printAFN();

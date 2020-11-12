@@ -25,6 +25,10 @@ public:
     AFD(int n, int initial_state, const std::vector<int>& finals);
     AFD(AFN* afn);
     void printAFD();
+    int getsize(){
+        return n_states;
+    }
+    std::map<int, state_d*> getStates(){return states;}
     void getAFD();
     friend class AFN;
 };
