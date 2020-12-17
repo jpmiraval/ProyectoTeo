@@ -8,6 +8,13 @@ AFD::AFD(int n, int initial_state, const std::vector<int>& finals) : n_states(n)
     initial = states[initial_state];
 }
 
+AFD::AFD(int n, int initial_state, const std::vector<int>& finals, bool flag) : n_states(n), n_final(finals.size()) {
+    for(int i = 0; i < n_states; ++i)
+        states[i] = new state_d(i);
+    set_final_states(finals);
+    initial = states[initial_state];
+}
+
 void AFD::set_final_states(const std::vector<int>& finals){
     for(auto &i: finals)
         states[i]->is_final = true;
