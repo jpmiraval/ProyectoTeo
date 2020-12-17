@@ -17,17 +17,26 @@ private:
     int n_final;
     state_d* initial;
     std::map<int, state_d*> states;
-
+    std::vector<int> finals;
     void fill_transitions();
     void set_final_states(const std::vector<int>& finals);
 
 public:
     AFD(int n, int initial_state, const std::vector<int>& finals);
+    AFD(int n, int initial_state, const std::vector<int>& finals, bool flag);
     AFD(AFN* afn);
     void printAFD();
     int getsize(){
         return n_states;
     }
+    int setSize(int n){
+        n_states = n;
+    }
+    void updateStates(std::map<int, state_d*> nuevo){
+        states = nuevo;
+    }
+    int geInitial(){return initial->state_number;}
+    std::vector<int> geFinals(){return finals;}
     std::map<int, state_d*> getStates(){return states;}
     void getAFD();
     friend class AFN;
