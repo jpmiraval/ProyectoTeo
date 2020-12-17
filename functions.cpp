@@ -198,7 +198,9 @@ int **Eq_test_op(AFD afd) {
                 } else if (i_zero == j and j_zero == i) {
                     inv_one = false;
                 }
-                if (i_zero != j_zero and same_zero and inv_zero) {
+
+
+                if ( i_zero != j_zero and ( same_zero and inv_zero)  ) {
                     if(dependencies.find(std::make_pair(i_zero, j_zero)) == dependencies.end())
                     dependencies[std::make_pair(i_zero, j_zero)] = new std::vector<std::pair<int, int>>;
 
@@ -216,6 +218,7 @@ int **Eq_test_op(AFD afd) {
                         dependencies[std::make_pair(i_one, j_one)]->push_back(std::make_pair(j, i));
 
                 }
+
             }
         }
     }
@@ -430,6 +433,7 @@ AFD *Huffman_Moore(AFD afd) {
         states.erase(afd.getsize());
     }
     afd.updateStates(states);
+    n = afd.getsize();
 
     int **matrix = Eq_test_op(afd);
     n = afd.getsize();
@@ -477,13 +481,63 @@ AFD *Huffman_Moore(AFD afd) {
 };
 
 AFD *Hopcroft(AFD afd) {
+    //Eliminamos losestados no alcanzables
+    //Cargamos los states originales
+    auto states = afd.getStates();
+    int n = afd.getsize();
+    std::set<int> total;
+    for (int i = 0; i < n; i++) {
+        total.insert(i);
+    }
+    std::set<int> reachables;
+    std::set<int> unreachables;
+    std::queue<int> quecito;
+    //Tomamos el estado inicial
+    auto initial_state = states[afd.geInitial()];
+    quecito.push(initial_state->state_number);
+    while (!quecito.empty()) {
+        auto actual_state = quecito.front();
+        quecito.pop();
+        reachables.insert(actual_state);
+        if (reachables.find(states[actual_state]->zero) == reachables.end()) {
+            quecito.push(states[actual_state]->zero);
+        }
+        if (reachables.find(states[actual_state]->one) == reachables.end()) {
+            quecito.push(states[actual_state]->one);
+        }
+    }
+    for (auto c : total)
+        if (reachables.find(c) == reachables.end()) {
+            unreachables.insert(c);
+        }
+    // set unreachable tiene ahora los stados inalcanzables
+    // Procedemos a eliminar los stados no alcanzables y renombrar los states afectados.
+    for (auto unreachable_state : unreachables) {
+        //disminuir en 1 el tamaño del afd;
+        afd.setSize(afd.getsize() - 1);
+        for (auto state : states) {
+            if (state.second->one > unreachable_state) {
+                state.second->set_relation(1, state.second->one - 1);
+            }
+            if (state.second->zero > unreachable_state) {
+                state.second->set_relation(0, state.second->zero - 1);
+            }
+            if (state.first > unreachable_state) {
+                states.at(state.first - 1) = states[state.first];
+                states[state.first - 1]->state_number--;
+            }
+        }
+        states.erase(afd.getsize());
+    }
+    afd.updateStates(states);
+    n = afd.getsize();
     //Separamos el afd en grupos según su comportamiento de final o no final
     std::set<std::set<int> *> nondistinguishable;
     std::set<std::set<int> *> Partitions;
-    auto states = afd.getStates();
+    auto updated_states = afd.getStates();
     std::set<int> *new_set = new std::set<int>;
     std::set<int> *new_set2 = new std::set<int>;
-    for (auto c : states) {
+    for (auto c : updated_states) {
         if (c.second->is_final) {
             new_set->insert(c.first);
         } else {
@@ -512,14 +566,14 @@ AFD *Hopcroft(AFD afd) {
         }
         for (auto a : Partitions) {
             for (auto m : *a) {
-                if (min->find(states[m]->zero) != min->end()) {
+                if (min->find(updated_states[m]->zero) != min->end()) {
                     intersection.insert(m);
                 }
             }
             if (intersection.size() == a->size() || intersection.size() == 0) {
                 intersection.clear();
                 for (auto m : *a) {
-                    if (min->find(states[m]->one) != min->end()) {
+                    if (min->find(updated_states[m]->one) != min->end()) {
                         intersection.insert(m);
                     }
                 }
@@ -553,8 +607,8 @@ AFD *Hopcroft(AFD afd) {
     AFD *new_AFD = new AFD(number, new_initial, new_final_states, true);
     auto new_states = new_AFD->getStates();
     for (auto i = 0; i < afd.getsize(); i++) {
-        new_states[translate(i, Partitions)]->set_relation(0, translate(states[i]->zero, Partitions));
-        new_states[translate(i, Partitions)]->set_relation(1, translate(states[i]->one, Partitions));
+        new_states[translate(i, Partitions)]->set_relation(0, translate(updated_states[i]->zero, Partitions));
+        new_states[translate(i, Partitions)]->set_relation(1, translate(updated_states[i]->one, Partitions));
     }
     return new_AFD;
 }
